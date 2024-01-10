@@ -121,8 +121,8 @@ class DocsAgent:
         except google.api_core.exceptions.InvalidArgument:
             return self.model_error_message
         if response.result is None:
-            print("Block reason: " + str(response.filters))
-            print("Safety feedback: " + str(response.safety_feedback))
+            print(f"Block reason: {str(response.filters)}")
+            print(f"Safety feedback: {str(response.safety_feedback)}")
             return self.model_error_message
         return response.result
 
@@ -136,10 +136,14 @@ class DocsAgent:
             response = palm.generate_content(new_prompt)
         except google.api_core.exceptions.InvalidArgument:
             return self.model_error_message
-        for chunk in response:
-            if str(chunk.candidates[0].content) == "":
-                return self.model_error_message
-        return response.text
+        return next(
+            (
+                self.model_error_message
+                for chunk in response
+                if not str(chunk.candidates[0].content)
+            ),
+            response.text,
+        )
 
     # Use this method for talking to a PaLM chat model
     def ask_chat_model_with_context(self, context, question):
@@ -152,9 +156,7 @@ class DocsAgent:
         except google.api_core.exceptions.InvalidArgument:
             return self.model_error_message
 
-        if response.last is None:
-            return self.model_error_message
-        return response.last
+        return self.model_error_message if response.last is None else response.last
 
     # Use this method for asking a PaLM text model for fact-checking
     def ask_text_model_to_fact_check(self, context, prev_response):

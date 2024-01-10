@@ -69,17 +69,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def resolve_path(rel_or_abs_path: str, base_dir=BASE_DIR):
     path = rel_or_abs_path.strip()
-    if path.startswith("/"):
-        return path
-    else:
-        return os.path.join(base_dir, path)
+    return path if path.startswith("/") else os.path.join(base_dir, path)
 
 
 MY_OUTPUT_PATH = resolve_path(MY_OUTPUT_PATH)
 os.makedirs(MY_OUTPUT_PATH, exist_ok=True)
 
-print("Set the output directory: " + MY_OUTPUT_PATH)
-print("Processing files from " + str(input_len) + " sources.")
+print(f"Set the output directory: {MY_OUTPUT_PATH}")
+print(f"Processing files from {str(input_len)} sources.")
 
 
 # This function converts a Markdown string to plain text.
@@ -132,16 +129,14 @@ def markdown_to_text(markdown_string):
 def read_markdown(file):
     try:
         with open(file, "r", encoding="utf-8") as mdfile:
-            output = mdfile.read()
-            return output
+            return mdfile.read()
     except FileNotFoundError:
-        print("[FileNotFound] Missing the include file: " + file)
+        print(f"[FileNotFound] Missing the include file: {file}")
 
 
 # This function converts Markdown page (#), section (##), and subsection (###)
 # headings into plain English.
 def process_page_and_section_titles(markdown_text):
-    updated_markdown = ""
     page_title = ""
     section_title = ""
     subsection_title = ""
@@ -156,6 +151,7 @@ def process_page_and_section_titles(markdown_text):
     if "URL" in data:
         final_url = data["URL"]
         metadata["URL"] = final_url
+    updated_markdown = ""
     for line in markdown_text.split("\n"):
         new_line = ""
         skip_this_line = False
@@ -190,36 +186,24 @@ def process_page_and_section_titles(markdown_text):
             # function to detect these headings for splitting).
             if page_title:
                 new_line = (
-                    '# The "'
-                    + page_title
+                    f'# The "{page_title}'
                     + '" page includes the following information:\n'
                 )
 
             if section_title:
                 new_line = (
-                    '# The "'
-                    + page_title
-                    + '" page has the "'
-                    + section_title
+                    f'# The "{page_title}" page has the "{section_title}'
                     + '" section that includes the following information:\n'
                 )
 
             if subsection_title:
                 new_line = (
-                    '# On the "'
-                    + page_title
-                    + '" page, the "'
-                    + section_title
-                    + '" section has the "'
-                    + subsection_title
+                    f'# On the "{page_title}" page, the "{section_title}" section has the "{subsection_title}'
                     + '" subsection that includes the following information:\n'
                 )
 
-        if skip_this_line is False:
-            if new_line:
-                updated_markdown += new_line + "\n"
-            else:
-                updated_markdown += line + "\n"
+        if not skip_this_line:
+            updated_markdown += new_line + "\n" if new_line else line + "\n"
     return updated_markdown, metadata
 
 
@@ -230,14 +214,10 @@ def process_includes(markdown_text, root):
         new_line = ""
         # Replaces Markdown includes with content
         if line.startswith("<<"):
-            include_match = re.search("^<<(.*?)>>", line)
-            if include_match:
-                include_file = os.path.abspath(root + "/" + include_match[1])
+            if include_match := re.search("^<<(.*?)>>", line):
+                include_file = os.path.abspath(f"{root}/{include_match[1]}")
                 new_line = read_markdown(include_file)
-        if new_line:
-            updated_markdown += new_line + "\n"
-        else:
-            updated_markdown += line + "\n"
+        updated_markdown += new_line + "\n" if new_line else line + "\n"
     return updated_markdown
 
 
@@ -298,7 +278,7 @@ def process_markdown_files_from_source(configs, inputpath, counter, excludepath)
                     # Grab the filename without the .md extension
                     new_filename = os.path.join(new_path, file)
                     # Add filename to a list
-                    file_slash = "/" + file
+                    file_slash = f"/{file}"
                     relative_path = os.path.relpath(root + file_slash, inputpath)
                     file_index.append(relative_path)
                     match = re.search(r"(.*)\.md$", new_filename)
@@ -324,7 +304,7 @@ def process_markdown_files_from_source(configs, inputpath, counter, excludepath)
                         else:
                             content = markdown_to_text(doc.page_content)
                         # Save clean plain text to a new filename appended with an index
-                        filename_to_save = new_filename_no_ext + "_" + str(i) + ".md"
+                        filename_to_save = f"{new_filename_no_ext}_{str(i)}.md"
                         # Generate UUID for each plain text chunk and collect its metadata,
                         # which will be written to the top-level `file_index.json` file.
                         md_hash = uuid.uuid3(namespace_uuid, content)
@@ -353,25 +333,25 @@ def process_markdown_files_from_source(configs, inputpath, counter, excludepath)
                             new_file.close()
                         i = i + 1
                     auto.close()
-    print("Processed " + str(f_count) + " Markdown files from the source: " + inputpath)
+    print(f"Processed {str(f_count)} Markdown files from the source: {inputpath}")
     return f_count
 
 
 # Write the recorded input variables into a file: `file_index.json`
 def save_file_index_json(src_file_index):
-    json_out_file = MY_OUTPUT_PATH + "/file_index.json"
+    json_out_file = f"{MY_OUTPUT_PATH}/file_index.json"
     with open(json_out_file, "w", encoding="utf-8") as outfile:
         json.dump(src_file_index, outfile)
     print(
-        "Created " + json_out_file + " to store the complete list of processed files."
+        f"Created {json_out_file} to store the complete list of processed files."
     )
 
 
 #### Main ####
-source_file_index = {}
 input_counter = 0
 total_file_count = 0
 
+source_file_index = {}
 # Main for-loop
 for input_counter in range(input_len):
     full_file_metadata = {}
@@ -396,7 +376,7 @@ for input_counter in range(input_len):
         config_values, input_path, input_counter, exclude
     )
     if not input_path.endswith("/"):
-        input_path = input_path + "/"
+        input_path = f"{input_path}/"
     input_path = resolve_path(input_path)
     # Record the input variables used in this path.
     file_list = {}
@@ -411,9 +391,5 @@ for input_counter in range(input_len):
 save_file_index_json(source_file_index)
 
 print(
-    "Processed a total of "
-    + str(total_file_count)
-    + " Markdown files from "
-    + str(input_counter)
-    + " sources."
+    f"Processed a total of {str(total_file_count)} Markdown files from {str(input_counter)} sources."
 )

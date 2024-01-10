@@ -99,10 +99,6 @@ if EMBEDDINGS_TYPE == "PALM":
     else:
         PALM_EMBEDDING_MODEL = EMBEDDING_MODEL
     emb_fn = embed_palm
-elif EMBEDDINGS_TYPE == "LOCAL":
-    emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name=LOCAL_LLM
-    )
 else:
     emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
         model_name=LOCAL_LLM
@@ -115,7 +111,7 @@ collection = chroma_client.get_collection(
 results = collection.query(query_texts=[QUESTION], n_results=NUM_RETURNS)
 
 print("")
-ai_console.print(Panel.fit(Markdown("Question: " + QUESTION)))
+ai_console.print(Panel.fit(Markdown(f"Question: {QUESTION}")))
 print("Results:")
 print(results)
 print("")
@@ -123,14 +119,14 @@ print("")
 i = 0
 for document in results["documents"]:
     for content in document:
-        print("Content " + str(i) + ": ")
+        print(f"Content {str(i)}: ")
         ai_console.print(Panel.fit(Markdown(content)))
         source = results["metadatas"][0][i]
         this_id = results["ids"][0][i]
         distance = results["distances"][0][i]
         print("  source: " + source["source"])
         print("  URL: " + source["url"])
-        print("  ID: " + this_id)
-        print("  Distance: " + str(distance))
+        print(f"  ID: {this_id}")
+        print(f"  Distance: {str(distance)}")
         print("")
         i += 1

@@ -16,6 +16,7 @@
 
 """Run the Docs Agent console in the terminal"""
 
+
 from absl import logging
 from rich.console import Console
 from rich.markdown import Markdown
@@ -53,7 +54,7 @@ while True:
     metadatas = result.fetch_formatted(Format.URL)
     ai_console.print(Panel.fit(Markdown(metadatas)))
     # Print the question
-    ai_console.print(Panel.fit("Question: " + question))
+    ai_console.print(Panel.fit(f"Question: {question}"))
     ai_console.print("\nPaLM 2:")
     # Pass the context and question to PaLM 2 (Text)
     response_text = docs_agent.ask_text_model_with_context(context_with_prefix, question)

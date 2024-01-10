@@ -60,68 +60,64 @@ def index():
 
 @bp.route("/like", methods=["GET", "POST"])
 def like():
-    if request.method == "POST":
-        json_data = json.loads(request.data)
-        is_like = json_data.get("like")
-        uuid_found = json_data.get("uuid")
-        log_like(is_like, str(uuid_found).strip())
-        return "OK"
-    else:
+    if request.method != "POST":
         return redirect(url_for("chatui.index"))
+    json_data = json.loads(request.data)
+    is_like = json_data.get("like")
+    uuid_found = json_data.get("uuid")
+    log_like(is_like, str(uuid_found).strip())
+    return "OK"
 
 
 @bp.route("/rewrite", methods=["GET", "POST"])
 def rewrite():
-    if request.method == "POST":
-        json_data = json.loads(request.data)
-        user_id = json_data.get("user_id")
-        question_captured = json_data.get("question")
-        original_response = json_data.get("original_response")
-        rewrite_captured = json_data.get("rewrite")
-        date_format = "%m%d%Y-%H%M%S"
-        date = datetime.now(tz=pytz.utc)
-        date = date.astimezone(timezone("US/Pacific"))
-        print("[" + date.strftime(date_format) + "] A user has submitted a rewrite.")
-        print("Submitted by: " + user_id + "\n")
-        print("# " + question_captured.strip() + "\n")
-        print("## Original response\n")
-        print(original_response.strip() + "\n")
-        print("## Rewrite\n")
-        print(rewrite_captured + "\n")
-        filename = (
-            rewrites_dir
-            + "/"
-            + question_captured.strip()
-            .replace(" ", "-")
-            .replace("?", "")
-            .replace("'", "")
-            .lower()
-            + "-"
-            + date.strftime(date_format)
-            + ".md"
-        )
-        with open(filename, "w", encoding="utf-8") as file:
-            file.write("Submitted by: " + user_id + "\n\n")
-            file.write("# " + question_captured.strip() + "\n\n")
-            file.write("## Original response\n\n")
-            file.write(original_response.strip() + "\n\n")
-            file.write("## Rewrite\n\n")
-            file.write(rewrite_captured + "\n")
-            file.close()
-        return "OK"
-    else:
+    if request.method != "POST":
         return redirect(url_for("chatui.index"))
+    json_data = json.loads(request.data)
+    user_id = json_data.get("user_id")
+    question_captured = json_data.get("question")
+    original_response = json_data.get("original_response")
+    rewrite_captured = json_data.get("rewrite")
+    date = datetime.now(tz=pytz.utc)
+    date = date.astimezone(timezone("US/Pacific"))
+    date_format = "%m%d%Y-%H%M%S"
+    print(f"[{date.strftime(date_format)}] A user has submitted a rewrite.")
+    print(f"Submitted by: {user_id}" + "\n")
+    print(f"# {question_captured.strip()}" + "\n")
+    print("## Original response\n")
+    print(original_response.strip() + "\n")
+    print("## Rewrite\n")
+    print(rewrite_captured + "\n")
+    filename = (
+        f"{rewrites_dir}/"
+        + question_captured.strip()
+        .replace(" ", "-")
+        .replace("?", "")
+        .replace("'", "")
+        .lower()
+        + "-"
+        + date.strftime(date_format)
+        + ".md"
+    )
+    with open(filename, "w", encoding="utf-8") as file:
+        file.write(f"Submitted by: {user_id}" + "\n\n")
+        file.write(f"# {question_captured.strip()}" + "\n\n")
+        file.write("## Original response\n\n")
+        file.write(original_response.strip() + "\n\n")
+        file.write("## Rewrite\n\n")
+        file.write(rewrite_captured + "\n")
+        file.close()
+    return "OK"
 
 
 # Render a response page when the user asks a question
 # using input text box.
 @bp.route("/result", methods=["GET", "POST"])
 def result():
-    if request.method == "POST":
-        question = request.form["question"]
-        return ask_model(question)
-    else:
+    if request.method != "POST":
         return redirect(url_for("chatui.index"))
+    question = request.form["question"]
+    return ask_model(question)
 
 
 # Render a response page when the user clicks a question
@@ -248,13 +244,13 @@ def log_question(uid, user_question, response):
     date_format = "%m/%d/%Y %H:%M:%S %Z"
     date = datetime.now(tz=pytz.utc)
     date = date.astimezone(timezone("US/Pacific"))
-    print("UID: " + str(uid))
-    print("Question: " + user_question.strip() + "\n")
+    print(f"UID: {str(uid)}")
+    print(f"Question: {user_question.strip()}" + "\n")
     print("Response:")
     print(response.strip() + "\n")
     with open("chatui_logs.txt", "a", encoding="utf-8") as log_file:
-        log_file.write("[" + date.strftime(date_format) + "][UID " + str(uid) + "]\n")
-        log_file.write("# " + user_question.strip() + "\n\n")
+        log_file.write(f"[{date.strftime(date_format)}][UID {str(uid)}" + "]\n")
+        log_file.write(f"# {user_question.strip()}" + "\n\n")
         log_file.write(response.strip() + "\n\n")
         log_file.close()
 
@@ -263,9 +259,9 @@ def log_like(is_like, uid):
     date_format = "%m/%d/%Y %H:%M:%S %Z"
     date = datetime.now(tz=pytz.utc)
     date = date.astimezone(timezone("US/Pacific"))
-    print("UID: " + str(uid))
-    print("Like: " + str(is_like))
+    print(f"UID: {str(uid)}")
+    print(f"Like: {str(is_like)}")
     with open("chatui_logs.txt", "a", encoding="utf-8") as log_file:
-        log_file.write("[" + date.strftime(date_format) + "][UID " + str(uid) + "]\n")
-        log_file.write("Like: " + str(is_like) + "\n\n")
+        log_file.write(f"[{date.strftime(date_format)}][UID {str(uid)}" + "]\n")
+        log_file.write(f"Like: {str(is_like)}" + "\n\n")
         log_file.close()

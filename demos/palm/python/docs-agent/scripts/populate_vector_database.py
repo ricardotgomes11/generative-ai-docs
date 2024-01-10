@@ -16,6 +16,7 @@
 
 """Populate the vector database with embeddings generated from text chunks"""
 
+
 import os
 import sys
 import re
@@ -82,20 +83,20 @@ API_CALL_PERIOD = 60
 
 # Enable relative directories.
 if not BASE_DIR.endswith("/"):
-    BASE_DIR = BASE_DIR + "/"
+    BASE_DIR = f"{BASE_DIR}/"
 
 if not PLAIN_TEXT_DIR.endswith("/"):
-    PLAIN_TEXT_DIR = PLAIN_TEXT_DIR + "/"
+    PLAIN_TEXT_DIR = f"{PLAIN_TEXT_DIR}/"
 
 FULL_BASE_DIR = BASE_DIR + PLAIN_TEXT_DIR
-print("Plain text directory: " + FULL_BASE_DIR + "\n")
+print(f"Plain text directory: {FULL_BASE_DIR}" + "\n")
 
 FULL_INDEX_PATH = PLAIN_TEXT_DIR + INPUT_FILE_INDEX
 try:
     with open(FULL_INDEX_PATH, "r", encoding="utf-8") as index_file:
         index = json.load(index_file)
 except FileNotFoundError:
-    msg = "The file " + FULL_INDEX_PATH + "does not exist."
+    msg = f"The file {FULL_INDEX_PATH}does not exist."
 
 if EMBEDDINGS_TYPE == "PALM":
     palm.configure(api_key=API_KEY, client_options={"api_endpoint": PALM_API_ENDPOINT})
@@ -106,22 +107,19 @@ if EMBEDDINGS_TYPE == "PALM":
         if "embedText" in m.supported_generation_methods
         or "embedContent" in m.supported_generation_methods
     ]
-    if EMBEDDING_MODEL != None:
+    if EMBEDDING_MODEL is None:
+        # By default, pick the first model on the list (likely "models/embedding-gecko-001")
+        MODEL = models[0]
+    else:
         # If `embedding_model` is specified in the `config.yaml` file, select that model.
         found_model = False
         for m in models:
             if m.name == EMBEDDING_MODEL:
                 MODEL = m
-                print("[INFO] Embedding model is set to " + str(m.name) + "\n")
+                print(f"[INFO] Embedding model is set to {str(MODEL.name)}" + "\n")
                 found_model = True
         if found_model is False:
-            sys.exit("[ERROR] Cannot find the embedding model: " + str(EMBEDDING_MODEL))
-    else:
-        # By default, pick the first model on the list (likely "models/embedding-gecko-001")
-        MODEL = models[0]
-elif EMBEDDINGS_TYPE == "LOCAL":
-    MODEL = os.path.join(BASE_DIR, "models/all-mpnet-base-v2")
-    emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=MODEL)
+            sys.exit(f"[ERROR] Cannot find the embedding model: {str(EMBEDDING_MODEL)}")
 else:
     MODEL = os.path.join(BASE_DIR, "models/all-mpnet-base-v2")
     emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=MODEL)

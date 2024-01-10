@@ -99,9 +99,7 @@ class PaLM:
         self.embed_model = embed_model
 
         # Check whether the specified models are supported
-        supported_models = set(
-            model.name for model in google.generativeai.list_models()
-        )
+        supported_models = {model.name for model in google.generativeai.list_models()}
         for model in (chat_model, text_model, content_model, embed_model):
             if model and model not in supported_models:
                 raise PaLMUnsupportedModelError(model, api_endpoint)
