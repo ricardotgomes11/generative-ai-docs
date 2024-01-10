@@ -43,11 +43,11 @@ class ReadConfig:
             with open(INPUT_YAML, "r", encoding="utf-8") as inp_yaml:
                 self.config_values = yaml.safe_load(inp_yaml)
                 self.IS_CONFIG_FILE = True
-                print("Reading the config file: " + INPUT_YAML)
+                print(f"Reading the config file: {INPUT_YAML}")
                 # Check that the required keys exist
                 self.validateKeys()
         except FileNotFoundError:
-            print("The config file " + INPUT_YAML + " does not exist.")
+            print(f"The config file {INPUT_YAML} does not exist.")
             # Exits the scripts if there is no valid config file
             return sys.exit(1)
 
@@ -57,13 +57,11 @@ class ReadConfig:
 
     # Function to return the path of the configuration file
     def returnConfigFile(self):
-        configFilePath = BASE_DIR + INPUT_YAML
-        return configFilePath
+        return BASE_DIR + INPUT_YAML
 
     # Function to count the quantity of input paths
     def returnInputCount(self):
-        count = len(self.returnConfigValue("input"))
-        return count
+        return len(self.returnConfigValue("input"))
 
     # Validates that a configuratioon file contains the required or optional keys
     def validateKeys(self):
@@ -71,9 +69,7 @@ class ReadConfig:
             if key in self.config_values:
                 # Validates lists such as input with their respective keys
                 if key == "input":
-                    count = 0
-                    for input in self.config_values["input"]:
-                        count += 1
+                    for count, input in enumerate(self.config_values["input"], start=1):
                         for required_key in required_input_keys:
                             if required_key not in input:
                                 print(
@@ -83,14 +79,14 @@ class ReadConfig:
                                     + str(count)
                                 )
             else:
-                print("Missing required configuration key: " + key)
+                print(f"Missing required configuration key: {key}")
         for key in optional_keys:
             if key not in self.config_values:
-                print("Missing optional configuration key: " + key)
+                print(f"Missing optional configuration key: {key}")
 
     # Checks if a key exists and returns its value
     def returnConfigValue(self, key):
         if key in self.config_values:
             return self.config_values[key]
         else:
-            print("Error: " + key + " does not exist in the " + INPUT_YAML + " file.")
+            print(f"Error: {key} does not exist in the {INPUT_YAML} file.")
